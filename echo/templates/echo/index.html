@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<textarea id='echo-log' cols='100', rows='20'></textarea></br>
+<input id='text-input' type='text' size='100'/></br>
+<input id='text-submit' type='button' value='Enter'/>
+
+
+<script>
+    var socket = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/'
+    );
+    socket.onmessage = function(e) {
+        var message = e.data;
+        document.querySelector('#echo-log').value += (message + '\n');
+    };
+
+    socket.onclose = function(e){
+        console.error('Socket closed unexpectedly');
+    };
+    document.querySelector('#text-input').focus();
+    document.querySelector('#text-input').onkeyup = function(e){
+        if (e.keycode === 13) {
+            document.querySelector('#text-submit').click();
+        }
+    };
+    document.querySelector('#text-submit').onclick = function(e){
+        var messageInputDom = document.querySelector('#text-input');
+        var message = messageInputDom.value;
+        socket.send(message);
+        messageInputDom.value = '';
+    }
+</script>
+</body>
+</html>

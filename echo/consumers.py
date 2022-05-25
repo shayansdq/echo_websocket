@@ -21,7 +21,6 @@ class EchoImageConsumer(WebsocketConsumer):
         return super().disconnect(close_code)
 
     def receive(self, text_data=None, bytes_data=None):
-        print('text',text_data,', binary',bytes_data)
         if text_data:
             self.send(text_data='Server: ' + text_data)
         elif bytes_data:

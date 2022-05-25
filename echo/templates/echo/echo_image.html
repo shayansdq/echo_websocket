@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+          crossorigin="anonymous">
+    <title>Document</title>
+</head>
+<body>
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <h1 class="display-4">Echo bytes</h1>
+        <p class="lead">This is example for sending  canvas data to server and receiving data from server...</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Sender canvas</h5>
+                    <canvas id="myCanvas1" width="300" height="300">
+                        Your broweser does not support the HTML5 canvas
+                    </canvas>
+                    <br>
+                    <button type="button" class="btn btn-primary" onclick="btnSend()">Send</button>
+                    <button type="button" class="btn btn-success" onclick="btnChangeColor()">ChangeColor</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Receiver Canvas</h5>
+                    <canvas id="myCanvas2" width="300" height="300">
+                        Your broweser does not support the HTML5 canvas
+                    </canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const socket = new WebSocket(
+        'ws://' + window.location.host + '/ws/image/'
+    );
+    socket.binaryType = 'arraybuffer'
+
+    socket.onmessage = function(e){
+        var message = e.data;
+        var arr = new Uint8Array(message);
+        var canvas = document.querySelector('#myCanvas2')
+        var ctx = canvas.getContext("2d");
+        var imageData = ctx.createImageData(canvas.width, canvas.height);
+        for (let i = 0;i < arr.length;i++){
+            imageData.data[i] = arr[i]
+        }
+        ctx.putImageData(imageData, 0, 0);
+    };
+    socket.onclose = function(e) {
+        console.error('Socket closed unexpectedly')
+    };
+
+    window.onload = function(e) {
+        btnChangeColor()
+    }
+
+    function btnChangeColor(){
+        var canvas = document.querySelector('#myCanvas1')
+        var ctx = canvas.getContext("2d")
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        //create gradient
+
+        var grd = ctx.createLinearGradient(0, 0, 400, 0)
+        const back = ["red", "blue", "gray", "yellow", "pink"]
+        var rand = back[Math.floor(Math.random() * back.length)]
+
+        grd.addColorStop(0, rand);
+        grd.addColorStop(1, 'white');
+
+        //Fill with gradient
+
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, 300, 300);
+    }
+    function btnSend() {
+        var canvas = document.querySelector('#myCanvas1')
+        var ctx = canvas.getContext("2d")
+        var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        var arr = new Uint8Array(imgData.data);
+        socket.send(arr)
+    };
+
+
+</script>
+</body>
+</html>

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'echo',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -72,6 +73,15 @@ TEMPLATES = [
 
 # WSGI_APPLICATION = 'echo_websocket.wsgi.application'
 ASGI_APPLICATION = 'echo_websocket.routing.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 1401)],
+        },
+    },
+}
 
 
 # Database

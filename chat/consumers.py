@@ -2,6 +2,7 @@ import json
 from channels.consumer import SyncConsumer, AsyncConsumer
 from channels.generic.websocket import WebsocketConsumer, AsyncWebsocketConsumer
 from asgiref.sync import async_to_sync
+from channels.exceptions import StopConsumer
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -32,6 +33,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'type': 'chat_message',
                     'message': text_data
                 })
+            await self.channel_layer.group_send(
+                'echo_1',
+                {
+                    'type': 'echo_message',
+                    'message': text_data
+                })
 
     async def chat_message(self, event):
         message = event['message']
@@ -52,7 +59,36 @@ class ChatConsumer2(AsyncConsumer):
         })
 
     async def websocket_disconnect(self, event):
-        pass
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+        raise StopConsumer()
 
     async def websocket_receive(self, event):
-        pass
+        text_data = event.get('text', None)
+        bytes_data = event.get('bytes', None)
+        if text_data:
+            text_data_json = json.loads(text_data)
+            username = text_data_json['receiver']
+            user_group_name = f"chat_{username}"
+            await self.channel_layer.group_send(
+                user_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': text_data
+                }
+            )
+            await self.channel_layer.group_send(
+                'echo_1',
+                {
+                    'type': 'echo_message',
+                    'message': text_data
+                })
+
+    async def chat_message(self, event):
+        message = event['message']
+        await self.send({
+            'type': 'websocket.send',
+            'text': message
+        })

@@ -10,7 +10,7 @@ application = ProtocolTypeRouter({
     'websocket': AuthMiddlewareStack(
         URLRouter(
             # echo_websocket_routing.websocket_urlpatterns,
-            chat_routing.websocket_urlpatterns
+            chat_routing.websocket_urlpatterns + echo_websocket_routing.websocket_urlpatterns
         )
     )
 })
